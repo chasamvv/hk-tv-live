@@ -1,0 +1,268 @@
+[
+  {
+    "name": "翡翠台 Jade",
+    "sub": "TVB 主频道 · 1080p · 自动搜源",
+    "icon": "",
+    "kw": [
+      "jade"
+    ],
+    "url": "http://103.172.187.30:12000/stream/mytv/null-1/master.m3u8",
+    "pool": [
+      "http://103.172.187.30:12000/stream/mytv/null-1/master.m3u8"
+    ]
+  },
+  {
+    "name": "明珠台 Golden Jade",
+    "sub": "英语频道 · 1080p · 自动搜源",
+    "icon": "",
+    "kw": [
+      "golden"
+    ],
+    "url": "http://103.172.187.30:12000/stream/mytv/null-12/master.m3u8",
+    "pool": [
+      "http://103.172.187.30:12000/stream/mytv/null-12/master.m3u8"
+    ]
+  },
+  {
+    "name": "剧集台 Asian Drama",
+    "sub": "港剧 · 1080p · 自动搜源",
+    "icon": "",
+    "kw": [
+      "asiandrama",
+      "asian drama"
+    ],
+    "url": "http://103.172.187.30:12000/stream/mytv/null-11/master.m3u8",
+    "pool": [
+      "http://103.172.187.30:12000/stream/mytv/null-11/master.m3u8"
+    ]
+  },
+  {
+    "name": "美亚电影台",
+    "sub": "华语电影 · 1080p · 自动搜源",
+    "icon": "",
+    "kw": [
+      "meiah",
+      "mei ah"
+    ],
+    "url": "http://103.172.187.30:12000/stream/mytv/null-9/master.m3u8",
+    "pool": [
+      "http://103.172.187.30:12000/stream/mytv/null-9/master.m3u8",
+      "http://103.172.187.30:12000/stream/mytv/null-2/master.m3u8",
+      "http://103.172.187.30:12000/stream/mytv/null-10/master.m3u8"
+    ]
+  },
+  {
+    "name": "黄金华剧台",
+    "sub": "TVB 华语剧集 · 1080p · 自动搜源",
+    "icon": "",
+    "kw": [
+      "华剧",
+      "huaju"
+    ],
+    "url": "http://103.172.187.30:12000/stream/mytv/null-8/master.m3u8",
+    "pool": [
+      "http://103.172.187.30:12000/stream/mytv/null-8/master.m3u8"
+    ]
+  },
+  {
+    "name": "中国电影频道",
+    "sub": "CHINA MOVIE · 1080p · 自动搜源",
+    "icon": "",
+    "kw": [
+      "china movie",
+      "中国电影"
+    ],
+    "url": "http://103.172.187.30:12000/stream/mytv/null-3/master.m3u8",
+    "pool": [
+      "http://103.172.187.30:12000/stream/mytv/null-3/master.m3u8"
+    ]
+  },
+  {
+    "name": "创世电视 Creation TV",
+    "sub": "香港免费台 17 · 1080p · 自动搜源",
+    "icon": "",
+    "kw": [
+      "creation"
+    ],
+    "url": "http://103.172.187.30:12000/stream/mytv/null-4/master.m3u8",
+    "pool": [
+      "http://103.172.187.30:12000/stream/mytv/null-4/master.m3u8"
+    ]
+  },
+  {
+    "name": "港台电视 31",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "rthktv31",
+      "rthk tv 31"
+    ],
+    "url": "https://rthktv31-live.akamaized.net/hls/live/2036818/RTHKTV31/master.m3u8",
+    "pool": [
+      "https://rthktv31-live.akamaized.net/hls/live/2036818/RTHKTV31/master.m3u8",
+      "https://rthklive1-lh.akamaihd.net/i/rthk31_1@167495/master.m3u8",
+      "https://www.rthk.hk/feeds/dtt/rthktv31_https.m3u8"
+    ]
+  },
+  {
+    "name": "港台电视 32",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "rthktv32"
+    ],
+    "url": "https://rthktv32-live.akamaized.net/hls/live/2036819/RTHKTV32/master.m3u8",
+    "pool": [
+      "https://rthktv32-live.akamaized.net/hls/live/2036819/RTHKTV32/master.m3u8",
+      "https://rthklive2-lh.akamaihd.net/i/rthk32_1@168450/master.m3u8"
+    ]
+  },
+  {
+    "name": "港台电视 33",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "rthktv33"
+    ],
+    "url": "https://rthktv33-live.akamaized.net/hls/live/2101641/RTHKTV33/master.m3u8",
+    "pool": [
+      "https://rthktv33-live.akamaized.net/hls/live/2101641/RTHKTV33/master.m3u8",
+      "https://www.rthk.hk/feeds/dtt/rthktv33_https.m3u8"
+    ]
+  },
+  {
+    "name": "港台电视 34",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "rthktv34"
+    ],
+    "url": "https://rthktv34-live.akamaized.net/hls/live/2101642/RTHKTV34/master.m3u8",
+    "pool": [
+      "https://rthktv34-live.akamaized.net/hls/live/2101642/RTHKTV34/master.m3u8"
+    ]
+  },
+  {
+    "name": "港台电视 35",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "rthktv35"
+    ],
+    "url": "https://rthktv35-live.akamaized.net/hls/live/2101643/RTHKTV35/master.m3u8",
+    "pool": [
+      "https://rthktv35-live.akamaized.net/hls/live/2101643/RTHKTV35/master.m3u8"
+    ]
+  },
+  {
+    "name": "HOY TV",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "hoy tv"
+    ],
+    "url": "https://hoytv-live-stream.hoy.tv/ch77/index.m3u8",
+    "pool": [
+      "https://hoytv-live-stream.hoy.tv/ch77/index.m3u8",
+      "https://hoytv-live-stream.hoy.tv/ch77/index-fhd.m3u8",
+      "https://cdn.qd.je/163189/hoy2"
+    ]
+  },
+  {
+    "name": "HOY 资讯台",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "hoy infotainment"
+    ],
+    "url": "https://hoytv-live-stream.hoy.tv/ch78/index.m3u8",
+    "pool": [
+      "https://hoytv-live-stream.hoy.tv/ch78/index.m3u8",
+      "https://hoytv-live-stream.hoy.tv/ch78/index-fhd.m3u8"
+    ]
+  },
+  {
+    "name": "香港国际财经台",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "hong kong international business"
+    ],
+    "url": "https://hoytv-live-stream.hoy.tv/ch76/index-fhd.m3u8",
+    "pool": [
+      "https://hoytv-live-stream.hoy.tv/ch76/index-fhd.m3u8"
+    ]
+  },
+  {
+    "name": "凤凰卫视中文台",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "phoenix chinese"
+    ],
+    "url": "http://223.110.245.139/ott.js.chinamobile.com/PLTV/3/224/3221226922/index.m3u8",
+    "pool": [
+      "http://223.110.245.139/ott.js.chinamobile.com/PLTV/3/224/3221226922/index.m3u8"
+    ]
+  },
+  {
+    "name": "凤凰卫视资讯台",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "phoenix infonews"
+    ],
+    "url": "http://223.110.245.167/ott.js.chinamobile.com/PLTV/3/224/3221226923/index.m3u8",
+    "pool": [
+      "http://223.110.245.167/ott.js.chinamobile.com/PLTV/3/224/3221226923/index.m3u8"
+    ]
+  },
+  {
+    "name": "BSTV 香港",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "bstv"
+    ],
+    "url": "http://202.69.67.66:443/webcast/bshdlive-pc/playlist.m3u8",
+    "pool": [
+      "http://202.69.67.66:443/webcast/bshdlive-pc/playlist.m3u8"
+    ]
+  },
+  {
+    "name": "天映电影台",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "celestial"
+    ],
+    "url": "http://103.58.160.157:8278/720-CELESTIALMOVIES/playlist.m3u8",
+    "pool": [
+      "http://103.58.160.157:8278/720-CELESTIALMOVIES/playlist.m3u8"
+    ]
+  },
+  {
+    "name": "Pet Club TV",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "pet club"
+    ],
+    "url": "https://petclub-samsungaus.amagi.tv/playlist.m3u8",
+    "pool": [
+      "https://petclub-samsungaus.amagi.tv/playlist.m3u8"
+    ]
+  },
+  {
+    "name": "ViuTV",
+    "sub": "⚠️ 受限 · 多数网络不可看 · 自动搜源",
+    "icon": "",
+    "kw": [
+      "viutv"
+    ],
+    "url": "http://61.238.6.49:8000/bysid/99",
+    "pool": [
+      "http://61.238.6.49:8000/bysid/99"
+    ]
+  }
+]
