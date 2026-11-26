@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#005a9e">
+<title>香港电视直播</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-512.png">
+<style>
+  :root{--bg:#0b1622;--panel:#13243a;--accent:#2b9df4;--txt:#e8f1fb;--muted:#8aa3bd}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    overscroll-behavior:none}
+  .app{display:flex;flex-direction:column;height:100%;height:100dvh}
+  header{padding:10px 14px;background:linear-gradient(90deg,#0d2a47,#0b1622);
+    display:flex;align-items:center;gap:10px;border-bottom:1px solid #1d3350}
+  header h1{font-size:17px;margin:0;font-weight:600}
+  header .live{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;text-align:right}
+  .dot{width:8px;height:8px;border-radius:50%;background:#3ad07a;box-shadow:0 0 8px #3ad07a;flex:none}
+  .dot.off{background:#d05a5a;box-shadow:none}
+  .dot.search{background:#f0b429;box-shadow:0 0 8px #f0b429;animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.4}}
+  .stage{flex:1;position:relative;background:#000;min-height:0}
+  video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+  .stage .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:14px;text-align:center;padding:20px;background:#0b1622}
+  .fs-btn{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.5);border:1px solid #2a4a6b;
+    color:#fff;border-radius:8px;padding:6px 10px;font-size:13px}
+  .controls{display:flex;gap:8px;padding:8px 12px;background:var(--panel)}
+  .controls button{flex:1;background:#1c3450;border:1px solid #2a4a6b;color:var(--txt);
+    border-radius:10px;padding:10px;font-size:14px}
+  .controls button:active{background:#2a4a6b}
+  .controls button.ghost{background:transparent;color:var(--accent)}
+  .toolbar{display:flex;gap:8px;padding:8px 12px;background:var(--panel);border-top:1px solid #1d3350}
+  .toolbar input{flex:1;background:#0d1f33;border:1px solid #2a4a6b;color:var(--txt);
+    border-radius:10px;padding:9px 12px;font-size:14px;outline:none}
+  .toolbar button{background:transparent;border:1px solid #2a4a6b;color:var(--muted);
+    border-radius:10px;padding:9px 12px;font-size:13px;white-space:nowrap}
+  .toolbar button.on{color:#ffcf6b;border-color:#ffcf6b}
+  .ch .star{margin-left:auto;font-size:18px;color:#3a4f66;padding:0 4px;background:none;border:none}
+  .ch .star.on{color:#ffcf6b}
+  .ch .meta{display:flex;flex-direction:column}
+  .ch .badge{font-size:11px;color:#ffcf6b}
+  .channels{overflow-y:auto;background:var(--panel);border-top:1px solid #1d3350;max-height:38%}
+  .ch{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #16273d;cursor:pointer}
+  .ch:active{background:#1c3450}
+  .ch.active{background:#16304a}
+  .ch .ic{width:42px;height:42px;border-radius:8px;object-fit:cover;background:#0d2036;flex:none}
+  .ch .nm{font-size:15px}
+  .ch .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .ch .badge{margin-left:auto;font-size:11px;color:#ffcf6b;display:flex;align-items:center;gap:4px}
+  .bar{height:env(safe-area-inset-bottom,0)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>📺 香港电视直播</h1>
+    <div class="live"><span class="dot off" id="statusDot"></span><span id="statusTxt">未连接</span></div>
+  </header>
+
+  <div class="stage">
+    <video id="video" playsinline webkit-playsinline x5-playsinline></video>
+    <div class="ph" id="placeholder">请选择下方频道开始观看<br>（源失效会自动重新搜索）</div>
+    <button class="fs-btn" id="fsBtn">全屏</button>
+  </div>
+
+  <div class="controls">
+    <button id="playBtn">⏯ 播放/暂停</button>
+    <button id="prevBtn">◀ 上一台</button>
+    <button id="nextBtn">下一台 ▶</button>
+    <button id="searchBtn" class="ghost">🔄 重搜</button>
+    <button id="updateBtn" class="ghost">↻ 更新源</button>
+  </div>
+
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="搜索频道名称…" autocomplete="off">
+    <button id="favToggle">☆ 收藏</button>
+  </div>
+
+  <div class="channels" id="list"></div>
+  <div class="bar"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<script>
+// 频道定义：url 为默认源；pool 为内置备用源；kw 用于联网从公开列表里匹配同名/同 tvg-id 频道
+const ICON = {
+  jade:"https://raw.githubusercontent.com/wanglindl/TVlogo/main/img/TVB1.png",
+  golden:"https://i.imgur.com/lPYxsUr.png",
+  asian:"https://i.imgur.com/wqtN7mH.png",
+  meiah:"https://i.imgur.com/laGiFM1.png",
+  r31:"https://i.imgur.com/kf818kM.png", r32:"https://i.imgur.com/MXLuUoU.png",
+  r33:"https://i.imgur.com/2MProun.png", r34:"https://i.imgur.com/Kq5A6Qn.png", r35:"https://i.imgur.com/FQmNKDS.png",
+  hoy:"https://i.imgur.com/NfVZPTT.png", hoyInfo:"https://i.imgur.com/LNokYLQ.png",
+  hoyBiz:"https://i.imgur.com/jaIdkbz.png", bstv:"https://i.imgur.com/GVYSSgm.png",
+  celestial:"https://i.imgur.com/Mb5ssnu.png", petclub:"https://i.imgur.com/ykPNNwQ.png",
+  phxCN:"https://raw.githubusercontent.com/wanglindl/TVlogo/main/img/Phoenix1.png",
+  phxInfo:"https://i.imgur.com/mt4h3VO.png",
+  goldrama:"icon-goldrama.png", chinamovie:"icon-chinamovie.png", creation:"icon-creation.png"
+};
+let CHANNELS = [
+  // —— 常用稳定源（mytv 中转，实测可直连）——
+  { name:"翡翠台 Jade", sub:"TVB 主频道 · 1080p · 自动搜源", icon:ICON.jade,
+    kw:["jade"], url:"http://103.172.187.30:12000/stream/mytv/null-1/master.m3u8",
+    pool:["http://103.172.187.30:12000/stream/mytv/null-1/master.m3u8"] },
+  { name:"明珠台 Golden Jade", sub:"英语频道 · 1080p · 自动搜源", icon:ICON.golden,
+    kw:["golden"], url:"http://103.172.187.30:12000/stream/mytv/null-12/master.m3u8",
+    pool:["http://103.172.187.30:12000/stream/mytv/null-12/master.m3u8"] },
+  { name:"剧集台 Asian Drama", sub:"港剧 · 1080p · 自动搜源", icon:ICON.asian,
+    kw:["asiandrama","asian drama"], url:"http://103.172.187.30:12000/stream/mytv/null-11/master.m3u8",
+    pool:["http://103.172.187.30:12000/stream/mytv/null-11/master.m3u8"] },
+  { name:"美亚电影台", sub:"华语电影 · 1080p · 自动搜源", icon:ICON.meiah,
+    kw:["meiah","mei ah"], url:"http://103.172.187.30:12000/stream/mytv/null-9/master.m3u8",
+    pool:["http://103.172.187.30:12000/stream/mytv/null-9/master.m3u8",
+          "http://103.172.187.30:12000/stream/mytv/null-2/master.m3u8",
+          "http://103.172.187.30:12000/stream/mytv/null-10/master.m3u8"] },
+  { name:"黄金华剧台", sub:"TVB 华语剧集 · 1080p · 自动搜源", icon:ICON.goldrama,
+    kw:["华剧","huaju"], url:"http://103.172.187.30:12000/stream/mytv/null-8/master.m3u8",
+    pool:["http://103.172.187.30:12000/stream/mytv/null-8/master.m3u8"] },
+  { name:"中国电影频道", sub:"CHINA MOVIE · 1080p · 自动搜源", icon:ICON.chinamovie,
+    kw:["china movie","中国电影"], url:"http://103.172.187.30:12000/stream/mytv/null-3/master.m3u8",
+    pool:["http://103.172.187.30:12000/stream/mytv/null-3/master.m3u8"] },
+  { name:"创世电视 Creation TV", sub:"香港免费台 17 · 1080p · 自动搜源", icon:ICON.creation,
+    kw:["creation"], url:"http://103.172.187.30:12000/stream/mytv/null-4/master.m3u8",
+    pool:["http://103.172.187.30:12000/stream/mytv/null-4/master.m3u8"] },
+  { name:"港台电视 31", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.r31,
+    kw:["rthktv31","rthk tv 31"], url:"https://rthktv31-live.akamaized.net/hls/live/2036818/RTHKTV31/master.m3u8",
+    pool:["https://rthktv31-live.akamaized.net/hls/live/2036818/RTHKTV31/master.m3u8",
+          "https://rthklive1-lh.akamaihd.net/i/rthk31_1@167495/master.m3u8",
+          "https://www.rthk.hk/feeds/dtt/rthktv31_https.m3u8"] },
+  // —— 港台电视其余频道（官方源 + 备用源池，部分地区可能受地域限制）——
+  { name:"港台电视 32", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.r32,
+    kw:["rthktv32"], url:"https://rthktv32-live.akamaized.net/hls/live/2036819/RTHKTV32/master.m3u8",
+    pool:["https://rthktv32-live.akamaized.net/hls/live/2036819/RTHKTV32/master.m3u8",
+          "https://rthklive2-lh.akamaihd.net/i/rthk32_1@168450/master.m3u8"] },
+  { name:"港台电视 33", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.r33,
+    kw:["rthktv33"], url:"https://rthktv33-live.akamaized.net/hls/live/2101641/RTHKTV33/master.m3u8",
+    pool:["https://rthktv33-live.akamaized.net/hls/live/2101641/RTHKTV33/master.m3u8",
+          "https://www.rthk.hk/feeds/dtt/rthktv33_https.m3u8"] },
+  { name:"港台电视 34", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.r34,
+    kw:["rthktv34"], url:"https://rthktv34-live.akamaized.net/hls/live/2101642/RTHKTV34/master.m3u8",
+    pool:["https://rthktv34-live.akamaized.net/hls/live/2101642/RTHKTV34/master.m3u8"] },
+  { name:"港台电视 35", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.r35,
+    kw:["rthktv35"], url:"https://rthktv35-live.akamaized.net/hls/live/2101643/RTHKTV35/master.m3u8",
+    pool:["https://rthktv35-live.akamaized.net/hls/live/2101643/RTHKTV35/master.m3u8"] },
+  // —— HOY 系列（香港开电视 / 奇妙电视，部分地区受地域限制，已加社区备用源）——
+  { name:"HOY TV", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.hoy,
+    kw:["hoy tv"], url:"https://hoytv-live-stream.hoy.tv/ch77/index.m3u8",
+    pool:["https://hoytv-live-stream.hoy.tv/ch77/index.m3u8",
+          "https://hoytv-live-stream.hoy.tv/ch77/index-fhd.m3u8",
+          "https://cdn.qd.je/163189/hoy2"] },
+  { name:"HOY 资讯台", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.hoyInfo,
+    kw:["hoy infotainment"], url:"https://hoytv-live-stream.hoy.tv/ch78/index.m3u8",
+    pool:["https://hoytv-live-stream.hoy.tv/ch78/index.m3u8",
+          "https://hoytv-live-stream.hoy.tv/ch78/index-fhd.m3u8"] },
+  { name:"香港国际财经台", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.hoyBiz,
+    kw:["hong kong international business"], url:"https://hoytv-live-stream.hoy.tv/ch76/index-fhd.m3u8",
+    pool:["https://hoytv-live-stream.hoy.tv/ch76/index-fhd.m3u8"] },
+  // —— 凤凰卫视（总部香港，免费源）——
+  { name:"凤凰卫视中文台", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.phxCN,
+    kw:["phoenix chinese"], url:"http://223.110.245.139/ott.js.chinamobile.com/PLTV/3/224/3221226922/index.m3u8",
+    pool:["http://223.110.245.139/ott.js.chinamobile.com/PLTV/3/224/3221226922/index.m3u8"] },
+  { name:"凤凰卫视资讯台", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.phxInfo,
+    kw:["phoenix infonews"], url:"http://223.110.245.167/ott.js.chinamobile.com/PLTV/3/224/3221226923/index.m3u8",
+    pool:["http://223.110.245.167/ott.js.chinamobile.com/PLTV/3/224/3221226923/index.m3u8"] },
+  // —— 其他免费频道 ——
+  { name:"BSTV 香港", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.bstv,
+    kw:["bstv"], url:"http://202.69.67.66:443/webcast/bshdlive-pc/playlist.m3u8",
+    pool:["http://202.69.67.66:443/webcast/bshdlive-pc/playlist.m3u8"] },
+  { name:"天映电影台", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.celestial,
+    kw:["celestial"], url:"http://103.58.160.157:8278/720-CELESTIALMOVIES/playlist.m3u8",
+    pool:["http://103.58.160.157:8278/720-CELESTIALMOVIES/playlist.m3u8"] },
+  { name:"Pet Club TV", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.petclub,
+    kw:["pet club"], url:"https://petclub-samsungaus.amagi.tv/playlist.m3u8",
+    pool:["https://petclub-samsungaus.amagi.tv/playlist.m3u8"] },
+  // —— 额外补充（iptv-org 列表未收录的主流港台）——
+  { name:"ViuTV", sub:"⚠️ 受限 · 多数网络不可看 · 自动搜源", icon:ICON.hoy,
+    kw:["viutv"], url:"http://61.238.6.49:8000/bysid/99",
+    pool:["http://61.238.6.49:8000/bysid/99"] }
+];
+
+const M3U_URL = "https://iptv-org.github.io/iptv/countries/hk.m3u"; // 公开源列表（CORS 开放），应用自己拉取、自动筛选
+
+// —— 自动更新源：启动 / 手动时拉取在线源清单覆盖本地内置源 ——
+// 候选地址：1) 自托管同目录 ./channels.json（同源，最稳）；2) 线上版同站点（同源时生效，跨域失败自动跳过）
+const SOURCE_CANDIDATES = [
+  './channels.json',
+  'https://a088c815e08a190d9.app.workbuddy.host/channels.json?sharecode=ROW5UYXDZ7'
+];
+async function fetchRemoteSources(){
+  for(const u of SOURCE_CANDIDATES){
+    try{
+      const r = await fetch(u, { cache:'no-store' });
+      if(!r.ok) continue;
+      const j = await r.json();
+      if(Array.isArray(j) && j.length && j[0] && j[0].name && Array.isArray(j[0].pool)) return j;
+    }catch(e){ /* 跨域/网络失败，试下一个 */ }
+  }
+  return null;
+}
+async function applyRemote(){
+  const lastName = (current>=0) ? CHANNELS[current].name : null;
+  const remote = await fetchRemoteSources();
+  if(!remote) return false;
+  CHANNELS = remote;
+  localStorage.setItem('hk_remote_channels', JSON.stringify(remote));
+  if(lastName){ const ni = CHANNELS.findIndex(c=>c.name===lastName); if(ni>=0) current = ni; }
+  render();
+  return true;
+}
+function toast(msg){
+  let t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div'); t.id='toast'; document.body.appendChild(t);
+    t.style.cssText='position:fixed;left:50%;top:64px;transform:translateX(-50%);background:#0b1622;color:#cfe3ff;border:1px solid #2a4a6b;padding:8px 14px;border-radius:10px;z-index:99;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.45)';
+  }
+  t.textContent = msg; t.style.display='block';
+  clearTimeout(t._t); t._t = setTimeout(()=>{ if(t) t.style.display='none'; }, 2600);
+}
+const video = document.getElementById('video');
+const list = document.getElementById('list');
+const ph = document.getElementById('placeholder');
+const dot = document.getElementById('statusDot');
+const stxt = document.getElementById('statusTxt');
+let hls = null, current = -1, searching = false;
+let favs = JSON.parse(localStorage.getItem('hk_fav_names') || '[]');
+let query = '', favOnly = false;
+
+function setStatus(state, txt){
+  dot.className = 'dot ' + (state==='ok'?'':state==='search'?'search':'off');
+  stxt.textContent = txt;
+}
+
+function render(){
+  list.innerHTML = '';
+  CHANNELS.forEach((c,i)=>{
+    if(favOnly && !favs.includes(c.name)) return;
+    if(query && !c.name.toLowerCase().includes(query.toLowerCase())) return;
+    const isFav = favs.includes(c.name);
+    const d = document.createElement('div');
+    d.className = 'ch' + (i===current?' active':'');
+    const badge = (i===current && !searching) ? '<span class="badge">▶ 播放中</span>'
+                : (i===current && searching) ? '<span class="badge">🔄 搜索中</span>' : '';
+    d.innerHTML = `<img class="ic" src="${c.icon}" onerror="this.style.visibility='hidden'">
+      <div class="meta"><div class="nm">${c.name}</div><div class="sub">${c.sub}</div></div>${badge}
+      <button class="star ${isFav?'on':''}" title="收藏">${isFav?'★':'☆'}</button>`;
+    d.onclick = ()=> ensurePlay(i);
+    d.querySelector('.star').onclick = (e)=>{
+      e.stopPropagation();
+      if(isFav) favs = favs.filter(x=>x!==c.name); else favs.push(c.name);
+      localStorage.setItem('hk_fav_names', JSON.stringify(favs));
+      render();
+    };
+    list.appendChild(d);
+  });
+  if(!list.children.length){
+    list.innerHTML = '<div style="padding:20px;color:#8aa3bd;text-align:center">没有匹配的频道</div>';
+  }
+}
+
+// 把某个源加载进 video，返回 Promise：首次 playing 即 resolve，致命错误或超时 reject
+function trySource(url){
+  return new Promise((resolve,reject)=>{
+    if(hls){ hls.destroy(); hls = null; }
+    let settled = false;
+    const cleanup = ()=>{ video.removeEventListener('playing',ok); video.removeEventListener('error',bad); clearTimeout(timer); };
+    const ok = ()=>{ if(!settled){ settled=true; cleanup(); resolve(); } };
+    const bad = ()=>{ if(!settled){ settled=true; cleanup(); reject(new Error('fail')); } };
+    video.addEventListener('playing', ok);
+    video.addEventListener('error', bad);
+    if(video.canPlayType('application/vnd.apple.mpegurl')){
+      video.src = url; video.play().catch(()=>{});
+    } else if(window.Hls && Hls.isSupported()){
+      hls = new Hls({ liveSyncDuration:3 });
+      hls.loadSource(url); hls.attachMedia(video);
+      hls.on(Hls.Events.ERROR, (e,d)=>{ if(d.fatal) bad(); });
+    } else { video.src = url; video.play().catch(()=>{}); }
+    const timer = setTimeout(bad, 9000); // 单源最多等 9 秒
+  });
+}
+
+// 联网抓取公开源列表，按关键词为本频道筛选候选源
+async function fetchLiveCandidates(ch){
+  try{
+    const res = await fetch(M3U_URL, { cache:'no-store' });
+    if(!res.ok) return [];
+    const text = await res.text();
+    const out = [];
+    const blocks = text.split('#EXTINF:').slice(1);
+    for(const b of blocks){
+      const urlLine = b.split('\n').find(l=>l.trim().startsWith('http'));
+      const url = urlLine && urlLine.trim();
+      const label = (b.split('\n')[0]||'').split(',').slice(1).join(',').trim();
+      if(!url) continue;
+      const hay = (label + ' ' + b).toLowerCase();
+      if(ch.kw.some(k=>hay.includes(k.toLowerCase()))) out.push({ label, url });
+    }
+    // 去重
+    const seen = new Set();
+    return out.filter(o=> o.url && !seen.has(o.url) && seen.add(o.url));
+  }catch(e){ return []; }
+}
+
+// 核心：确保某频道能播——先试缓存/默认/内置备用，再联网自动搜索
+async function ensurePlay(i){
+  current = i; render();
+  ph.style.display = 'none';
+  const ch = CHANNELS[i];
+  const cached = localStorage.getItem('src_'+encodeURIComponent(ch.name));
+  const pool = [];
+  if(cached) pool.push(cached);
+  pool.push(...ch.pool);
+
+  searching = true; render();
+  // 第一轮：内置源
+  for(let k=0;k<pool.length;k++){
+    setStatus('search', `搜索可用源 (${k+1}/${pool.length})`);
+    try{ await trySource(pool[k]); return finish(i, pool[k]); }
+    catch(e){ /* 试下一个 */ }
+  }
+  // 第二轮：联网自动搜索公开源
+  setStatus('search', '联网自动搜索新源…');
+  const live = await fetchLiveCandidates(ch);
+  for(let k=0;k<live.length;k++){
+    setStatus('search', `联网源 (${k+1}/${live.length})`);
+    try{ await trySource(live[k].url); return finish(i, live[k].url); }
+    catch(e){ /* 试下一个 */ }
+  }
+  // 全部失败
+  searching = false; render();
+  setStatus('off', '未找到可用源');
+  ph.style.display = 'flex';
+  ph.innerHTML = `${ch.name} 当前所有源均不可用。<br>可稍后再试，或改用官方 RTHK TV App。`;
+}
+
+function finish(i, url){
+  localStorage.setItem('src_'+encodeURIComponent(CHANNELS[i].name), url);
+  searching = false; render();
+  setStatus('ok', '直播中 · ' + CHANNELS[i].name);
+}
+
+// 观看中掉线 → 自动重搜（避开重复触发）
+video.addEventListener('error', ()=>{ if(current>=0 && !searching && !video.paused) ensurePlay(current); });
+
+document.getElementById('playBtn').onclick = ()=>{ if(current>=0) video.paused ? video.play() : video.pause(); };
+document.getElementById('nextBtn').onclick = ()=> ensurePlay((current+1)%CHANNELS.length);
+document.getElementById('prevBtn').onclick = ()=> ensurePlay((current-1+CHANNELS.length)%CHANNELS.length);
+document.getElementById('searchBtn').onclick = ()=>{ if(current>=0) ensurePlay(current); };
+document.getElementById('updateBtn').onclick = async ()=>{
+  const btn = document.getElementById('updateBtn');
+  btn.disabled = true; const old = btn.textContent; btn.textContent = '更新中…';
+  const ok = await applyRemote();
+  btn.disabled = false; btn.textContent = old;
+  toast(ok ? ('已更新到 '+CHANNELS.length+' 个频道') : '未能拉取在线源，继续使用本地源');
+};
+document.getElementById('search').addEventListener('input', e=>{ query = e.target.value.trim(); render(); });
+document.getElementById('favToggle').onclick = ()=>{
+  favOnly = !favOnly;
+  document.getElementById('favToggle').classList.toggle('on', favOnly);
+  document.getElementById('favToggle').textContent = favOnly ? '★ 收藏' : '☆ 收藏';
+  render();
+};
+document.getElementById('fsBtn').onclick = ()=>{
+  if(!document.fullscreenElement) video.requestFullscreen?.() || video.webkitEnterFullscreen?.();
+  else document.exitFullscreen?.();
+};
+
+render();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// 启动：先用上次缓存的远程源秒开，再后台拉取最新源清单（不打断当前播放）
+(async()=>{
+  const cached = JSON.parse(localStorage.getItem('hk_remote_channels')||'null');
+  if(cached && Array.isArray(cached) && cached.length && cached[0] && cached[0].name){
+    const lastName = (current>=0)?CHANNELS[current].name:null;
+    CHANNELS = cached;
+    if(lastName){ const ni=CHANNELS.findIndex(c=>c.name===lastName); if(ni>=0) current=ni; }
+    render();
+  }
+  applyRemote();
+})();
+</script>
+</body>
+</html>
